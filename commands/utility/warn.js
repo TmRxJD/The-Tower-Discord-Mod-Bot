@@ -35,7 +35,8 @@ const rules = [
   'One Account/Player',
   'Bypassing Bans/Appeals',
   'Discord TOS',
-  'Streaming Adult Content'
+  'Streaming Adult Content',
+  'Sharing Private Information'
 ];
 
 const severityMap = [0, 5, 15, 60, 1440, 10080];
@@ -123,7 +124,10 @@ module.exports = {
         .addStringOption(opt => {
           const option = opt.setName('rule').setDescription('Rule # Violated').setRequired(true);
           try {
+            // Add all numbered rules
             const choices = Array.isArray(rules) ? rules.slice(0, 25).map((r, i) => ({ name: `Rule ${i + 1} - ${r}`, value: String(i) })) : [];
+            // Add the unnumbered 'Other' option at the end
+            choices.push({ name: 'Other', value: 'other' });
             if (choices.length) option.addChoices(...choices);
           } catch (e) {
             // generous fallback: leave as free-text if addChoices fails
@@ -170,7 +174,9 @@ module.exports = {
       // Build reason text: prefer a rule label if rule was selected, include free-text reason under it if provided.
       let reason = 'No reason provided';
       if (rule) {
-        if (!isNaN(Number(rule)) && Array.isArray(rules) && rules[Number(rule)]) {
+        if (rule === 'other') {
+          reason = 'Other';
+        } else if (!isNaN(Number(rule)) && Array.isArray(rules) && rules[Number(rule)]) {
           reason = `Rule ${Number(rule) + 1} - ${rules[Number(rule)]}`;
         } else {
           reason = `Rule - ${String(rule)}`;
@@ -193,7 +199,14 @@ module.exports = {
 
 
       // Prepare values for display
-      const publicReason = rule && !isNaN(Number(rule)) && Array.isArray(rules) && rules[Number(rule)] ? `Rule ${Number(rule) + 1} - ${rules[Number(rule)]}` : (rule ? `Rule - ${String(rule)}` : 'No reason provided');
+      let publicReason = 'No reason provided';
+      if (rule === 'other') {
+        publicReason = 'Other';
+      } else if (rule && !isNaN(Number(rule)) && Array.isArray(rules) && rules[Number(rule)]) {
+        publicReason = `Rule ${Number(rule) + 1} - ${rules[Number(rule)]}`;
+      } else if (rule) {
+        publicReason = `Rule - ${String(rule)}`;
+      }
       const muteLengthLabel = formatDuration(muteTime);
       const commentsText = freeTextReason && String(freeTextReason).trim().length ? String(freeTextReason).trim() : null;
 
