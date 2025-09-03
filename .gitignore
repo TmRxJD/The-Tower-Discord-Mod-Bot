@@ -1,0 +1,70 @@
+# Node modules
+node_modules/
+
+# Environment / secrets
+.env
+config.json
+bot-token.txt
+google_credentials.json
+*.key
+*.pem
+*.p12
+
+# Databases / persistent data
+data/
+*.sqlite
+*.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build / dist
+dist/
+build/
+out/
+
+# VSCode
+.vscode/
+.history/
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon
+
+# Editors and IDEs
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+~*
+
+# npm
+package-lock.json
+
+# Misc
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore traineddata or other large assets not needed in git
+*.traineddata
+
+# Ignore deployments and tokens
+deploy-commands.js
+
+# Keep this repository-specific ignore for any local overrides
+.gitignore.local
+
+# Other
+warn_settings.txt

@@ -1,0 +1,24 @@
+{
+  "name": "tower-mod-bot",
+  "version": "1.0.0",
+  "main": "TowerModBot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {    
+    "better-sqlite3": "^11.7.0",   
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.4.7",    
+    "form-data": "^4.0.1",
+    "fs": "^0.0.1-security",   
+    "node-fetch": "^2.7.0",
+    "node-schedule": "^2.1.1",
+    "onnxruntime-node": "^1.20.1",
+    "path": "^0.12.7",
+    "sqlite3": "^5.1.7"
+  }
+}
