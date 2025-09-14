@@ -41,20 +41,8 @@ function saveToHistory(guildId, userId, username, sourceChannelId, targetChannel
     [guildId, userId, username, timestamp, sourceChannelId, targetChannelId]);
 }
 
-// Helper function to build command with dynamic choices
-async function buildMoveCommand() {
-  // Get all approved channels from all guilds to build a comprehensive list
-  // This will be used for command registration
-  const allChannels = await new Promise((resolve) => {
-    db.all('SELECT DISTINCT channelName FROM approved_channels ORDER BY channelName', [], (err, rows) => {
-      if (err) {
-        console.error('Database error in buildMoveCommand:', err);
-        return resolve([]);
-      }
-      resolve(rows);
-    });
-  });
-
+// Helper function to build command with static choices
+function buildMoveCommand() {
   const command = new SlashCommandBuilder()
     .setName('move')
     .setDescription('Ask users to move the conversation to offtopic channels')
@@ -64,18 +52,12 @@ async function buildMoveCommand() {
         .setDescription('Which channel to send the move message to?')
         .setRequired(true);
       
-      // Add choices based on database content
-      if (allChannels.length > 0) {
-        // Discord limits to 25 choices max
-        const choices = allChannels.slice(0, 25).map(ch => ({
-          name: ch.channelName,
-          value: ch.channelName
-        }));
-        opt.addChoices(...choices);
-      } else {
-        // Fallback if no channels configured yet
-        opt.addChoices({ name: 'No channels configured', value: 'none' });
-      }
+      // Static choices
+      opt.addChoices(
+        { name: 'Tower Talks', value: 'Tower Talks' },
+        { name: 'Player Questions', value: 'Player Questions' },
+        { name: 'Player Questions Q&A', value: 'Player Questions Q&A' }
+      );
       
       return opt;
     });
@@ -84,17 +66,17 @@ async function buildMoveCommand() {
 }
 
 module.exports = {
-  async data() {
-    return await buildMoveCommand();
-  },
-
+  category: 'utility',
+  data: buildMoveCommand(),  // Synchronous now
   async execute(interaction) {
     try {
-      // Get approved channels from database for this guild
-      const approvedChannels = await getApprovedChannels(interaction.guild.id);
-      const approvedChannelIds = approvedChannels.map(ch => ch.channelId);
+      // Static channel mapping
+      const staticChannels = {
+        'Tower Talks': '851012141837975602',
+        'Player Questions': '1104477649549664327',
+        'Player Questions Q&A': '1413097207107817564'
+      };
 
-      // Allow if user has ModerateMembers permission OR the special role
       const allowedRoleId = '1082576750472609892';
       const member = interaction.member;
       const hasModPerm = member.permissions?.has(PermissionFlagsBits.ModerateMembers);
@@ -106,18 +88,12 @@ module.exports = {
       // Get the selected channel name from the string option
       const selectedChannelName = interaction.options.getString('channel');
       
-      // Check if it's the fallback option
-      if (selectedChannelName === 'none') {
-        return interaction.reply({ content: 'No channels are configured. Please use `/move_settings` to set up approved channels.', ephemeral: true });
+      const targetChannelId = staticChannels[selectedChannelName];
+      if (!targetChannelId) {
+        return interaction.reply({ content: 'Invalid channel selected.', ephemeral: true });
       }
       
-      // Map the channel name back to channel ID for this specific guild
-      const approvedChannel = approvedChannels.find(ch => ch.channelName === selectedChannelName);
-      if (!approvedChannel) {
-        return interaction.reply({ content: 'Selected channel is not approved for this server. Please use `/move_settings` to configure approved channels.', ephemeral: true });
-      }
-      
-      const targetChannel = interaction.guild.channels.cache.get(approvedChannel.channelId);
+      const targetChannel = interaction.guild.channels.cache.get(targetChannelId);
       
       if (!targetChannel) {
         return interaction.reply({ content: 'Could not find the selected channel in this server.', ephemeral: true });
@@ -128,9 +104,8 @@ module.exports = {
         author: { name: 'The Tower Officer' },
         title: 'Off Topic',
         description:
-          'This conversation is a little off-topic for this chat.\n\nPlease move over to\n' +
-          '<#850137218290417757>\nor you can find a subject in here\n' +
-          '<#1218096394724970516>\n\nThank you!',
+          'This conversation is a little off-topic for this chat.\n\nPlease get back on track or move over to\n' +
+          '<#850137218290417757>\n\nThank you!',
         footer: { text: 'To use this command type /move' }
       };
 

@@ -195,6 +195,7 @@ function stopSubmissionCollector(channel, type) {
 }
 
 module.exports = {
+  category: 'utility',
   data: eventCommand,
   restoreActiveCollectors,
   async execute(interactionOrMessage) {

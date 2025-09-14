@@ -100,6 +100,7 @@ async function sendToLogChannel(interaction, embed, sourceMsg = null) {
 }
 
 module.exports = {
+	category: 'utility',
 	data: new SlashCommandBuilder()
 		.setName('warnings')
 		.setDescription('Show warning/mute history for a user')
@@ -225,6 +226,7 @@ module.exports = {
 					row.addComponents(new ButtonBuilder().setCustomId('warn_confirm').setLabel('Warn').setStyle(ButtonStyle.Primary));
 					if (targetMember && targetMember.communicationDisabledUntil && targetMember.communicationDisabledUntil > Date.now()) {
 						row.addComponents(new ButtonBuilder().setCustomId('extend_mute').setLabel('Extend Mute').setStyle(ButtonStyle.Secondary));
+						row.addComponents(new ButtonBuilder().setCustomId('unmute_user').setLabel('Unmute').setStyle(ButtonStyle.Success));
 					}
 					// Start remove warnings flow
 					row.addComponents(new ButtonBuilder().setCustomId('remove_warnings_start').setLabel('Remove Warning').setStyle(ButtonStyle.Danger));
@@ -314,7 +316,7 @@ module.exports = {
 					outerCollector = message.createMessageComponentCollector({ filter, time: 5 * 60 * 1000 });
 					outerCollector.on('collect', async i => {
 						try {
-							if (i.customId === 'history_prev' || i.customId === 'history_next') {
+								if (i.customId === 'history_prev' || i.customId === 'history_next') {
 								if (i.customId === 'history_prev') page = Math.max(0, page - 1);
 								if (i.customId === 'history_next') page = Math.min(totalPages - 1, page + 1);
 								const newPagination = new ActionRowBuilder();
@@ -327,9 +329,7 @@ module.exports = {
 								comps.push(makeMainButtons());
 								await i.update({ embeds: [await buildHistoryEmbed(page)], components: comps });
 								return;
-							}
-
-							// Moderation actions -- fetch the member
+							}							// Moderation actions -- fetch the member
 							const targetMember = await i.guild.members.fetch(user.id).catch(() => null);
 							if (!targetMember) {
 								await safeEphemeralReply(i, 'User not found in this server.');
@@ -352,6 +352,33 @@ module.exports = {
 								await sendToLogChannel(i, logEmbed).catch(() => null);
 								try { await i.update({ content: `Action performed: extend_mute`, components: [] }); } catch {}
 								try { outerCollector.stop(); } catch (e) {}
+								return;
+							}
+
+							if (i.customId === 'unmute_user') {
+								// Refresh the member data
+								const refreshedMember = await i.guild.members.fetch({ user: user.id, force: true }).catch(() => null);
+								if (!refreshedMember) {
+									await safeEphemeralReply(i, 'Could not fetch user data.');
+									return;
+								}
+								// Unmute the user
+								try { await refreshedMember.timeout(null, `Unmuted via /warnings by ${i.user.tag}`); } catch (err) { /* ignore */ }
+								await safeEphemeralReply(i, `${refreshedMember.user.tag} has been unmuted.`);
+								// Update targetMember for button visibility
+								targetMember = refreshedMember;
+								// Update the embed to reflect the new status
+								const updatedEmbed = await buildHistoryEmbed(page);
+								const updatedButtons = makeMainButtons();
+								const comps = [];
+								if (totalPages > 1) {
+									const pagination = new ActionRowBuilder();
+									if (page > 0) pagination.addComponents(new ButtonBuilder().setCustomId('history_prev').setLabel('Prev Page').setStyle(ButtonStyle.Secondary));
+									if (page < totalPages - 1) pagination.addComponents(new ButtonBuilder().setCustomId('history_next').setLabel('Next Page').setStyle(ButtonStyle.Secondary));
+									comps.push(pagination);
+								}
+								comps.push(updatedButtons);
+								try { await i.update({ embeds: [updatedEmbed], components: comps }); } catch {}
 								return;
 							}
 

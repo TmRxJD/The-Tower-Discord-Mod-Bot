@@ -117,6 +117,7 @@ async function sendToLogChannel(interaction, embed) {
 }
 
 module.exports = {
+  category: 'utility',
   data: new SlashCommandBuilder()
     .setName('warn')
     .setDescription('Warn or mute a user (no UI)')

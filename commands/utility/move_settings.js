@@ -328,6 +328,7 @@ function buildSettingsComponents(interaction, approvedChannels, pingRole, logCha
 }
 
 module.exports = {
+  category: 'utility',
   data: new SlashCommandBuilder()
     .setName('move_settings')
     .setDescription('Configure settings for the move command (mods only)'),

@@ -33,6 +33,7 @@ function setModsSettings(guildId, channelId, roleId) {
 }
 
 module.exports = {
+  category: 'utility',
   data: new SlashCommandBuilder()
     .setName('mods_settings')
     .setDescription('Configure mods notification channel and role')

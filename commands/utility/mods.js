@@ -65,6 +65,7 @@ function setModsSettings(guildId, channelId, roleId) {
 }
 
 module.exports = {
+  category: 'utility',
   data: new SlashCommandBuilder()
     .setName('mods')
     .setDescription('Notify moderators')

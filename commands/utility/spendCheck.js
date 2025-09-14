@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const fetch = require('node-fetch');
 
 module.exports = {
+  category: 'utility',
   data: new SlashCommandBuilder()
     .setName('spendcheck')
     .setDescription('Check a player\'s purchase and booster history')
